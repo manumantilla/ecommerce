@@ -38,10 +38,12 @@ Route::put('/producto/{producto}',[ProductoController::class,'update'])->name('p
 Route::delete('/producto/{producto}/delete',[ProductoController::class, 'destroy'])->name('producto.destroy');
 
 // * Route for products side client
-Route::get('/allproducts',[ProductoController::class,'showProducts'])->name('venta.showProducts');
-
+Route::get('/allproducts',[VentaController::class,'showProducts'])->name('venta.showProducts');
 // * Routes for Cart
-Route::get('/carrito',[VentaController::class, 'cart'])->name('carrito.showcart');
-Route::post('/carrito/add',[VentaController::class,'addCart'])->name('carrito.addcart');
+// Rutas para el carrito de compras
+Route::get('/carrito', [VentaController::class, 'cart'])->name('venta.cart'); // Muestra el carrito
+Route::post('/carrito/add/{id}', [VentaController::class,'addCart'])->name('venta.addCart'); // Agrega un producto al carrito
+Route::delete('/carrito/{id}', [VentaController::class, 'delete'])->name('venta.deleteFromCart'); // Elimina un producto del carrito
+
 
 require __DIR__.'/auth.php';

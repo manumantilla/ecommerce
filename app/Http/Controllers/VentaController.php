@@ -1,49 +1,66 @@
 <?php
-
 namespace App\Http\Controllers;
-
+use App\Models\Producto;
+use App\Models\Categoria;
+use App\Models\Proveedor;
 use Illuminate\Http\Request;
-
 class VentaController extends Controller
 {
     //Show dashboard panel products
     public function showProducts(){
         $productos = Producto::paginate(10);
+
+        //dd($productos);
         return view('venta.showProducts',compact('productos'));
     }
     // Add the information in the cart
-    public function addCart(Request $request, Producto $producto){
-        $producto = Producto::find($producto);
-
+    public function addCart($id)
+    {
+        // Buscar el producto por ID
+        $producto = Producto::find($id);
         if(!$producto){
-            return redirect->back()->with('error','Producto no encontrado');
+            return redirect()->back()->with('error','Producto no encontrado');
         }
-        $cantidad = $request->input('cantidad',1);
-        // * Get the cart from session()
-        $carrito = session()->get('carrito',[]);
-        // ? Look if products already in cart
+        // Obtener el carrito de la sesión (o un array vacío si no existe)
+        $carrito = session()->get('carrito', []);
+        // Verificar si el producto ya está en el carrito
         if(isset($carrito[$producto->id])){
-            $carrito[$producto->id]['cantidad']+=$cantidad;
-        }else{
-            $carrito[$producto] = [
+            // Mensaje para cuando el producto ya estaba y se ha incrementado la cantidad
+            session()->put('carrito', $carrito);
+            return redirect()->route('venta.showProducts')->with('success', 'Ya tienes agregado este producto en tu carrito');
+        } else {
+            // Agregar el producto al carrito
+            $carrito[$producto->id] = [
                 'id' => $producto->id,
-                'nombre' =>$producto->nombre,
+                'nombre' => $producto->nombre,
                 'precio' => $producto->precio,
-                'cantidad' => $cantidad,
+                'cantidad' => 1,
                 'imagen' => $producto->imagen,
             ];
         }
-        // todo Save the cart in the session
-        session()->put('carrito',$carrito);
-        return redirect()->route('carrito')->with('success','Producto Agregado al Carrito');
+        // Guardar el carrito actualizado en la sesión
+        session()->put('carrito', $carrito);
 
+        // Redirigir a la vista del carrito
+        return redirect()->route('venta.cart')->with('success', 'Producto agregado al carrito');
     }
     //Show the cart
     public function cart(){
         $carrito = session()->get('carrito',[]);
-        return view('carrito.show', compact('carrito'));
+        return view('venta.cart', compact('carrito'));
     }
-
+    //delete on item for the cart
+    public function delete($id){
+        //recuperar el carrito
+        $carrito = session()->get('carrito',[]);
+        //verificar
+        if(isset($carrito[$id])){
+            unset($carrito[$id]);
+            session()->put('carrito',$carrito);//actualizar
+        }
+        return redirect()->route('venta.showProducts')->with('success','Eliminado');
+    }
+    //delete all the cart
     public function realizarCompra(Request $request){
         $request ->validate([
             'nombre' => 'required|string',
@@ -83,5 +100,9 @@ class VentaController extends Controller
 
         return redirect()->route('ventas')->with('success', 'Compra realizada exitosamente');
             
+    }
+    //compra
+    public function compra(Request $request){
+
     }
 }
