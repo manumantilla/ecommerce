@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             //ProductoSeeder::class,
             proveedores::class,
             categoriasSeeder::class,
+            ProductoSeeder::class,
         ]);
     }
 }

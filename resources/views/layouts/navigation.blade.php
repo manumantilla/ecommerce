@@ -16,14 +16,28 @@
                         {{ __('Ecommerce Manuelito') }}
                     </x-nav-link>
                 </div>
+                <!--This show the route for products only for admins-->
+                @if (auth()->user() && auth()->user()->tipo === 'admin')
+                    <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                        <x-nav-link :href="route('producto.index')" :active="request()->routeIs('dashboard')">
+                            {{ __('Productos') }}
+                        </x-nav-link>
+                    </div> 
+                @endif
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('producto.index')" :active="request()->routeIs('dashboard')">
-                        {{ __('Productos') }}
+                        <x-nav-link :href="route('venta.showProducts')" :active="request()->routeIs('dashboard')">
+                            {{ __('Todos los Productos') }}
+                        </x-nav-link>
+                    </div> 
+
+                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                    <x-nav-link :href="route('venta.cart')" :active="request()->routeIs('dashboard')">
+                        {{ __('Carrito') }}
                     </x-nav-link>
                 </div>
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('venta.cart    ')" :active="request()->routeIs('dashboard')">
-                        {{ __('Carrito') }}
+                    <x-nav-link :href="route('venta.cart')" :active="request()->routeIs('dashboard')">
+                        {{ __('Estadisticas') }}
                     </x-nav-link>
                 </div>
             </div>
