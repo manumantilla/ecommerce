@@ -39,6 +39,9 @@ Route::delete('/producto/{producto}/delete',[ProductoController::class, 'destroy
 
 // * Route for products side client
 Route::get('/allproducts',[VentaController::class,'showProducts'])->name('venta.showProducts');
+// ! search
+Route::get('/search',[VentaController::class,'search']);
+
 // * Routes for Cart
 // Rutas para el carrito de compras
 Route::get('/carrito', [VentaController::class, 'cart'])->name('venta.cart'); // Muestra el carrito

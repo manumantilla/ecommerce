@@ -105,4 +105,20 @@ class VentaController extends Controller
     public function compra(Request $request){
 
     }
+    //*search
+    public function search(Request $request)
+    {
+        $query = $request->get('q');
+        
+        // Buscar productos cuyo nombre coincida con la búsqueda
+        $productos = Producto::where('nombre', 'LIKE', "%{$query}%")
+            ->with('categoria') // Traer la relación de categoría
+            ->get();
+    
+        // Retornar los productos como JSON
+        return response()->json($productos);
+    }
+    
+        
+
 }
