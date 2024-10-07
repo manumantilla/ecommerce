@@ -32,21 +32,22 @@ Route::post('/producto/store',[ProductoController::class, 'store'])->name('produ
 Route::get('/producto/index',[ProductoController::class, 'index'])->name('producto.index');//esta ruta si requiere que sea admin para que solo el admin mire el precio al por mayor y que tenga posibilidad de hacer acciones crud
 Route::get('/producto/{producto}/show',[ProductoController::class,'show'])->name('producto.show');
 Route::get('/producto/{producto}/edit', [ProductoController::class, 'edit'])->name('producto.edit');
-
 Route::put('/producto/{producto}',[ProductoController::class,'update'])->name('producto.update');
-
 Route::delete('/producto/{producto}/delete',[ProductoController::class, 'destroy'])->name('producto.destroy');
 
-// * Route for products side client
+// * Route for products --side client
 Route::get('/allproducts',[VentaController::class,'showProducts'])->name('venta.showProducts');
 // ! search
 Route::get('/search',[VentaController::class,'search']);
-
 // * Routes for Cart
-// Rutas para el carrito de compras
 Route::get('/carrito', [VentaController::class, 'cart'])->name('venta.cart'); // Muestra el carrito
 Route::post('/carrito/add/{id}', [VentaController::class,'addCart'])->name('venta.addCart'); // Agrega un producto al carrito
-Route::delete('/carrito/{id}', [VentaController::class, 'delete'])->name('venta.deleteFromCart'); // Elimina un producto del carrito
+
+//? Show final Invoice
+Route::get('/carrito/checkout',[VentaController::class, 'checkout'])->name('venta.checkout');
+Route::post('/venta/update-cart', [VentaController::class, 'updateCart'])->name('venta.updateCart');
+Route::delete('/venta/delete-from-cart/{id}', [VentaController::class, 'deleteFromCart'])->name('venta.deleteFromCart');
+
 
 
 require __DIR__.'/auth.php';

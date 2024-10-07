@@ -1,33 +1,40 @@
 @extends('layouts.app')
-
 @section('content')
 <div class="max-w-7xl mx-auto mt-10">
     <h1 class="text-3xl font-bold mb-6">Buscar Productos</h1>
-
     <!-- Formulario de búsqueda -->
     <div class="mb-6">
 
         <input type="text" id="search" name="search" class="  border rounded w-full py-2 px-3 text-gray-700  focus:outline-none focus:shadow-outline" placeholder="Buscar productos...">
         
     </div>
-
     <!-- Productos -->
     <div id="productos-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6">
-        @foreach ($productos as $producto)
-            <div class="bg-white rounded-lg shadow-md p-4">
+    @foreach ($productos as $producto)
+        <!-- Formulario individual por cada producto -->
+        <form action="{{ route('venta.addCart', $producto->id) }}" method="POST" class="">
+            @csrf
+            <div class="bg-white rounded-lg shadow-md p-4 h-100">
                 <img class="w-full h-48 object-cover rounded-t-md" src="{{ asset('images/' . $producto->imagen) }}" alt="{{ $producto->nombre }}">
                 <div class="mt-4">
                     <p class="text-sm text-gray-500">{{ $producto->categoria->nombre }}</p>
                     <h3 class="text-lg font-semibold text-gray-800">{{ $producto->nombre }}</h3>
                     <p class="text-lg font-bold text-gray-900">${{ number_format($producto->precio) }}</p>
+                    
                 </div>
+     
+                    <button type="submit" class="m-5 py-2 px-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Agregar al Carrito</button>
+                
             </div>
-        @endforeach
-    </div>
+        </form>
+    @endforeach
+</div>
 
-    <div class="mt-8">
-        {{ $productos->links() }}
-    </div>
+<!-- Mostrar Paginación -->
+<div class="mt-8">
+    {{ $productos->links() }}
+</div>
+
 </div>
 <script>
     document.getElementById('search').addEventListener('keyup', function () {
@@ -62,5 +69,4 @@
         });
     });
 </script>
-
 @endsection

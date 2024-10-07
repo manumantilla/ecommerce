@@ -34,7 +34,10 @@ class VentaController extends Controller
                 'id' => $producto->id,
                 'nombre' => $producto->nombre,
                 'precio' => $producto->precio,
+                'existencia' => $producto->cantidad, //We pass on the stock to calc if the stoch isnot sufficient
                 'cantidad' => 1,
+                'descuneto' => 0,
+                'precio_al_por_mayor' => $producto->precio_al_por_mayor,//for calculta the top disscount
                 'imagen' => $producto->imagen,
             ];
         }
@@ -50,16 +53,20 @@ class VentaController extends Controller
         return view('venta.cart', compact('carrito'));
     }
     //delete on item for the cart
-    public function delete($id){
-        //recuperar el carrito
-        $carrito = session()->get('carrito',[]);
-        //verificar
-        if(isset($carrito[$id])){
+    public function deleteFromCart($id)
+    {
+        $carrito = session()->get('carrito', []);
+        if (isset($carrito[$id])) {
+
             unset($carrito[$id]);
-            session()->put('carrito',$carrito);//actualizar
+            session()->put('carrito', $carrito);
+    
+            return response()->json(['success' => true]);
         }
-        return redirect()->route('venta.showProducts')->with('success','Eliminado');
+    
+        return response()->json(['success' => false, 'message' => 'Producto no encontrado']);
     }
+    
     //delete all the cart
     public function realizarCompra(Request $request){
         $request ->validate([
@@ -101,6 +108,81 @@ class VentaController extends Controller
         return redirect()->route('ventas')->with('success', 'Compra realizada exitosamente');
             
     }
+    public function updateCart(Request $request)
+    {
+        // Obtener el carrito de la sesión
+        $carrito = session()->get('carrito', []);
+        $cantidades = $request->input('cantidad');
+        $descuentos = $request->input('descuento');
+        $totalDescuento = 0;
+    
+        // Iterar sobre las cantidades para verificar disponibilidad y actualizar el carrito
+        foreach ($cantidades as $id => $cantidadSolicitada) {
+            if (isset($carrito[$id])) { //check if the product exists in the cart
+                $producto = $carrito[$id];
+                $existencia = $producto['existencia']; // we call the existence
+    
+                //Validate if quantity requested exceeds stock
+                if ($cantidadSolicitada > $existencia) {
+                    return redirect()->route('venta.cart')->with([
+                        'error' => "La cantidad solicitada para el producto {$producto['nombre']} excede la existencia disponible de $existencia unidades."
+                    ]);
+                }
+    
+                // Update the quantity requested in the cart
+                $carrito[$id]['cantidad'] = max(1, (int)$cantidadSolicitada);
+    
+                // Validate the disscount and put in the cart
+                $descuento = $descuentos[$id] ?? 0;
+                $precioTotal = $producto['precio'] * $cantidadSolicitada;
+                $precioMayor = $producto['precio_al_por_mayor'] * $cantidadSolicitada;
+                /**
+                 The rest of $a y $b give us the profit margin
+                 */
+                $descuentoPermitido = $precioTotal - $precioMayor;
+    
+                if ($descuento <= $descuentoPermitido) {
+                    $carrito[$id]['descuento'] = $descuento;
+                    $totalDescuento += $descuento;
+                } else {
+                    return redirect()->route('venta.cart')->with([
+                        'error' => "El descuento para el producto {$producto['nombre']} excede el margen de ganancia."
+                    ]);
+                    $carrito[$id]['descuento'] = 0; // Manejo del descuento inválido
+  
+                }
+            }
+        }
+    
+        // Guardar el carrito actualizado en la sesión
+        session()->put('carrito', $carrito);
+    
+        // Redirigir de nuevo al carrito con un mensaje de éxito
+        return redirect()->route('venta.cart')->with([
+            'success' => 'Cantidad(es) y descuento(s) actualizados correctamente',
+            'totalDescuento' => $totalDescuento
+        ]);
+    }
+     
+    // ? Mostrar factura final
+    public function checkout(){
+        $carrito = session()->get('carrito',[]);
+        if(empty($carrito))
+        {
+            return redirect()->route('venta.showProducts')->with('success','No hay productos en el carrito');
+        }
+
+        //calcular
+        $total = 0;
+        foreach($carrito as $producto)
+        {
+            //agregar descuento y contarlo
+            $total += $producto['precio'] * $producto['cantidad'];
+        }
+        //retornar la vista de chekcout
+        return view('venta.checkout',compact('carrito','total'));
+    }
+
     //compra
     public function compra(Request $request){
 
