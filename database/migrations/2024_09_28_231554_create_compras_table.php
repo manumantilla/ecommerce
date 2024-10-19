@@ -15,9 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->integer('cedula');
-            $table->float('celular');
+            $table->float('celular')->nullable();
             $table->string('email');
-            $table->date('fecha');
             $table->string('direccion');
             $table->string('descripcion');
             $table->decimal('total');

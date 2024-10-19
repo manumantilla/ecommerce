@@ -45,6 +45,7 @@ Route::post('/carrito/add/{id}', [VentaController::class,'addCart'])->name('vent
 
 //? Show final Invoice
 Route::get('/carrito/checkout',[VentaController::class, 'checkout'])->name('venta.checkout');
+Route::post('/carrito/checkout2',[VentaController::class,'checkout2'])->name('venta.checkout2');
 Route::post('/venta/update-cart', [VentaController::class, 'updateCart'])->name('venta.updateCart');
 Route::delete('/venta/delete-from-cart/{id}', [VentaController::class, 'deleteFromCart'])->name('venta.deleteFromCart');
 

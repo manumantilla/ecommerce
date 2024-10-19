@@ -75,7 +75,7 @@
     $(document).ready(function() {
         $('.eliminar-btn').click(function() {
             const productId = $(this).data('id');
-
+                    
             if (confirm('¿Seguro que deseas eliminar este producto?')) {
                 $.ajax({
                     url: `{{ url('venta/delete-from-cart') }}/${productId}`,

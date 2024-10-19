@@ -3,7 +3,12 @@ namespace App\Http\Controllers;
 use App\Models\Producto;
 use App\Models\Categoria;
 use App\Models\Proveedor;
+use App\Models\Compra;
+use App\Models\DetalleCompra;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 class VentaController extends Controller
 {
     //Show dashboard panel products
@@ -165,6 +170,7 @@ class VentaController extends Controller
     }
      
     // ? Mostrar factura final
+
     public function checkout(){
         $carrito = session()->get('carrito',[]);
         if(empty($carrito))
@@ -172,21 +178,85 @@ class VentaController extends Controller
             return redirect()->route('venta.showProducts')->with('success','No hay productos en el carrito');
         }
 
-        //calcular
+        //calcular total compra
         $total = 0;
+        $totalDescuento = 0;
         foreach($carrito as $producto)
         {
-            //agregar descuento y contarlo
-            $total += $producto['precio'] * $producto['cantidad'];
+            //Calculate the total
+            $total +=( $producto['precio'] * $producto['cantidad'])-$producto['descuento'];
+            //caltulate the disscount total
+            $totalDescuento += $producto['descuento'];
         }
         //retornar la vista de chekcout
-        return view('venta.checkout',compact('carrito','total'));
+        return view('venta.checkout',compact('carrito','total','totalDescuento'));
     }
 
     //compra
-    public function compra(Request $request){
+    public function checkout2(Request $request)
+    {
+        // Validaciones del formulario
+        $request->validate([
+            'nombre' => 'required|string|max:255', // Asegúrate de validar el campo 'nombre'
+            'cedula' => 'required|string|max:20',
+            'email' => 'required|email|max:255',
+            'direccion' => 'required|string|max:255',
+            'celular' => 'nullable|numeric|min:0',
+            'descripcion' => 'nullable|string', // Descripción puede ser opcional
+            'total' => 'required|numeric', // Valida el total correctamente
+            'estado' => 'nullable|string',
+            'forma_pago' => 'nullable|string',
+            'productos' => 'required|array', // Esperamos un array de productos
+            'productos.*.cantidad' => 'required|integer|min:1', // Cada producto debe tener una cantidad
+            'productos.*.precio' => 'required|numeric|min:0', // Precio de cada producto
+            'productos.*.descuento' => 'nullable|numeric|min:0', // Descuento opcional por producto
+        ]);
+    
+        try {
+            //dd($request);
+            // Iniciar una transacción para asegurar la consistencia de los datos
+    
+            // Crear la compra
+            $compra = Compra::create([
+                'nombre' => $request->nombre,
+                'cedula' => $request->cedula,
+                'email' => $request->email,
+                'direccion' => $request->direccion,
+                'descripcion' => $request->descripcion,
+                'celular' => $request->celular,
+                'total' => $request->total, // Asegúrate de que este campo esté en el formulario
+                'estado' => $request->estado,
+                'forma_pago' => $request->forma_pago,
+            ]);
+    
+            // Registrar los detalles de cada producto en la compra
+            foreach ($request->productos as $producto) {
+                $subtotal = ($producto['precio'] * $producto['cantidad']) - ($producto['descuento'] ?? 0);
+    
+                DetalleCompra::create([
+                    'compra_id' => $compra->id, // Aseguramos que sea la compra correcta
+                    'producto_id' => $producto['id'],
+                    'cantidad' => $producto['cantidad'],
+                    'precio_unitario' => $producto['precio'],
+                    'subtotal' => $subtotal,
+                    'descuento' => $producto['descuento'] ?? 0,
+                ]);
+            }
+    
+            // Confirmar la transacción
+    
+            session()->forget('carrito');
 
+            // Retornar una respuesta exitosa
+            return redirect()->route('venta.showProducts')->with('success', 'Bien');
+
+    
+        } catch (\Exception $e) {
+            // Handle exceptions gracefully
+            return redirect()->back()->withErrors('Error al vender el animal: ' . $e->getMessage());
+        }
     }
+    
     //*search
     public function search(Request $request)
     {
