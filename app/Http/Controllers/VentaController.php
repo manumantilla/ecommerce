@@ -5,6 +5,7 @@ use App\Models\Categoria;
 use App\Models\Proveedor;
 use App\Models\Compra;
 use App\Models\DetalleCompra;
+use App\Models\Credito;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -205,6 +206,7 @@ class VentaController extends Controller
             'descripcion' => 'nullable|string', // Descripción puede ser opcional
             'total' => 'required|numeric', // Valida el total correctamente
             'estado' => 'nullable|string',
+            'fecha_pago' => 'date',
             'forma_pago' => 'nullable|string',
             'productos' => 'required|array', // Esperamos un array de productos
             'productos.*.cantidad' => 'required|integer|min:1', // Cada producto debe tener una cantidad
@@ -214,48 +216,72 @@ class VentaController extends Controller
     
         try {
             //dd($request);
-            // Iniciar una transacción para asegurar la consistencia de los datos
-    
-            // Crear la compra
-            $compra = Compra::create([
-                'nombre' => $request->nombre,
-                'cedula' => $request->cedula,
-                'email' => $request->email,
-                'direccion' => $request->direccion,
-                'descripcion' => $request->descripcion,
-                'celular' => $request->celular,
-                'total' => $request->total, // Asegúrate de que este campo esté en el formulario
-                'estado' => $request->estado,
-                'forma_pago' => $request->forma_pago,
-            ]);
-    
-            // Registrar los detalles de cada producto en la compra
-            foreach ($request->productos as $producto) {
-                $subtotal = ($producto['precio'] * $producto['cantidad']) - ($producto['descuento'] ?? 0);
-    
-                DetalleCompra::create([
-                    'compra_id' => $compra->id, // Aseguramos que sea la compra correcta
-                    'producto_id' => $producto['id'],
-                    'cantidad' => $producto['cantidad'],
-                    'precio_unitario' => $producto['precio'],
-                    'subtotal' => $subtotal,
-                    'descuento' => $producto['descuento'] ?? 0,
+            if($request->input('estado') === 'credito'){
+                $compra = Compra::create([
+                    'nombre' => $request->nombre,
+                    'cedula' => $request->cedula,
+                    'email' => $request->email,
+                    'direccion' => $request->direccion,
+                    'descripcion' => $request->descripcion,
+                    'celular' => $request->celular,
+                    'total' => $request->total, // Asegúrate de que este campo esté en el formulario
+                    'estado' => $request->estado,
+                    'forma_pago' => $request->forma_pago,
                 ]);
+                $credito = Credito::create([
+                    'compra_id' => $compra->id,
+                    'monto_total' => $request->total,
+                    'fecha_pago' => $request->fecha_pago,
+                ]);
+            }else{
+                        // Crear la compra
+                $compra = Compra::create([
+                    'nombre' => $request->nombre,
+                    'cedula' => $request->cedula,
+                    'email' => $request->email,
+                    'direccion' => $request->direccion,
+                    'descripcion' => $request->descripcion,
+                    'celular' => $request->celular,
+                    'total' => $request->total, // Asegúrate de que este campo esté en el formulario
+                    'estado' => $request->estado,
+                    'forma_pago' => $request->forma_pago,
+                ]);
+    
+
             }
-    
-            // Confirmar la transacción
-    
-            session()->forget('carrito');
-
-            // Retornar una respuesta exitosa
-            return redirect()->route('venta.showProducts')->with('success', 'Bien');
-
+                        // Registrar los detalles de cada producto en la compra
+                        foreach ($request->productos as $producto) {
+                            $subtotal = ($producto['precio'] * $producto['cantidad']) - ($producto['descuento'] ?? 0);
+                            DetalleCompra::create([
+                                'compra_id' => $compra->id, // Aseguramos que sea la compra correcta
+                                'producto_id' => $producto['id'],
+                                'cantidad' => $producto['cantidad'],
+                                'precio_unitario' => $producto['precio'],
+                                'subtotal' => $subtotal,
+                                'descuento' => $producto['descuento'] ?? 0,
+                            ]);
+                            //Actualizar la cantidad
+                            $producto['id']->update([
+                                'cantidad' => $producto['cantidad'],
+                            ]);
+                        }
+                
+                        // Confirmar la transacción
+                
+                        session()->forget('carrito');
+            
+                        // Retornar una respuesta exitosa
+                        return redirect()->route('venta.showProducts')->with('success', 'Bien');
+            
+                
+            
     
         } catch (\Exception $e) {
             // Handle exceptions gracefully
             return redirect()->back()->withErrors('Error al vender el animal: ' . $e->getMessage());
         }
     }
+
     
     //*search
     public function search(Request $request)

@@ -32,11 +32,17 @@
                 <input name="email"class="m-4 rounded"placeholder="Correo Electronico" type="email"></input>
                 <input name="direccion"class="m-4 rounded" placeholder="Direccion" type="text">
                 <input name="celular" class="m-4 rounded" placeholder="Celular" type="number">
-                <input name="descripcion" class="m-4 rounded" placeholder="Descripcion" type="text">
+                <input name="descripcion" class="m-4 rounded" placeholder="Descripcion" >
                 <select name="estado" id="estado">
-                    <option value="pagada" class="">Pago de Contado</option>
-                    <option value="credito">Credito</option>
+                    <option value="pagada">Contado</option>
+                    <option value="credito" >Credito</option>
                 </select>
+
+                <div id="fecha_pago_container" style="display:none;">
+                    <label for="fecha_pago">Fecha Limite Pago</label>
+                    <input type="date" name="fecha_pago" id="fecha_pago">
+                </div>
+            
                 <select name="forma_pago" id="forma_pago">
                     <option value="efectivo">Efectivo</option>
                     <option value="transferencia">Transferencia</option>
@@ -95,6 +101,25 @@
       
 <!--Show the time-->
 <script>
+      $(document).ready(function(){
+            // Evento change cuando se selecciona un estado
+            $('#estado').on('change', function(){
+                var estadoSeleccionado = $(this).val();
+
+                // Si el valor seleccionado es "credito", mostrar el campo de fecha
+                if(estadoSeleccionado === 'credito') {
+                    $('#fecha_pago_container').show();
+                } else {
+                    // Si es cualquier otro valor, ocultar el campo de fecha
+                    $('#fecha_pago_container').hide();
+                }
+            });
+
+            // Llamada inicial para que al cargar la página, dependiendo del valor seleccionado, se oculte o muestre el campo
+            $('#estado').trigger('change');
+        });
+
+
     function mostrarFechaHora() {
         const fechaHora = new Date();
         const opciones = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };

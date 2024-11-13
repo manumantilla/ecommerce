@@ -69,7 +69,6 @@ class ProductoController extends Controller
        // Validar la entrada
        $request->validate([
            'nombre' => 'required|string',
-           'descripcion' => 'required|string',
            'id_categoria' => 'required|numeric',
            'descripcion' => 'required|string',
            'id_proveedor' => 'required|numeric',
@@ -109,7 +108,6 @@ class ProductoController extends Controller
            'precio_al_por_mayor' => $request->precio_al_por_mayor,
            'fecha_vencimiento' => $request->fecha_vencimiento,
            'ubicacion' => $request->ubicacion,
-           'imagen' => $producto->imagen,
        ]);
    
        return redirect()->route('producto.index')->with('success', 'Producto Actualizado Correctamente');

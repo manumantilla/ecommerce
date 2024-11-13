@@ -5,6 +5,7 @@
         <h1 class="text-3xl font-bold mb-6">Carrito de Compras</h1>
 
         <form action="{{ route('venta.updateCart') }}" method="POST">
+    
             @csrf
             <table class="min-w-full bg-white">
                 <thead>

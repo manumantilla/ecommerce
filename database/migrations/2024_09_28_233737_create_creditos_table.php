@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignID('compra_id')->constrained('compras')->onDelete('cascade');
             $table->float('monto_total');
-            $table->float('saldo_pendiente');
+            $table->float('saldo_pendiente')->nullable();
             $table->date('fecha_pago'); 
             $table->timestamps();
         });
